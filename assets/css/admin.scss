@@ -1,0 +1,308 @@
+/**
+ * All of the CSS for your admin-specific functionality should be
+ * included in this file.
+ */
+
+.acp {
+
+	.hide {
+		display: none;
+	}
+
+	&-overlay, &-modal {
+		//display: none;
+		z-index: 1001;
+
+		&.open {
+			display: block;
+		}
+	}
+	&-overlay {
+		position: fixed;
+		width: calc(100% - 160px);
+		height: 100%;
+		top: 0;
+		left: 160px;
+		background-color: rgba(#000, .3);
+		opacity: 1;
+		transition: opacity .2s ease-in-out;
+	}
+	&-modal {
+		width: 40%;
+		margin-left: -20%;
+		position: absolute;
+		top: 5em;
+		left: 50%;
+		margin-bottom: 5em;
+
+		input[type="search"] {
+			width: 100%;
+			margin: 0;
+			padding: 1em;
+			background-color: transparent;
+			box-shadow: none;
+			border: none;
+			color: #fff;
+			font-size: 2em;
+			-webkit-appearance: none;
+			outline: 0;
+
+			&::-webkit-input-placeholder {
+				color: rgba(#fff,.7);
+			}
+		}
+
+		@media ( max-width: 799px ) {
+			display: block;
+			width: 100%;
+			margin: 0;
+			position: static;
+		}
+	}
+
+	@keyframes spin {
+		0% {
+			transform: rotateZ(0deg);
+		}
+		100% {
+			transform: rotateZ(360deg);
+		}
+	}
+
+	@keyframes sk-doubleBounce {
+		0%, 100% { transform: scale(0) }
+		50% { transform: scale(1.0) }
+	}
+
+	// Styles for the results header
+	&-results-count {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 1em 1.375em;
+		color: #FFF;
+		font-size: 1.5em;
+		border-bottom: 1px solid #000;
+
+		.clear {
+			margin-left: .5em;
+			font-size: .625em;
+			font-weight: bold;
+			text-decoration: none;
+			text-transform: uppercase;
+		}
+		.loader {
+			width: 1em;
+			height: 1em;
+			position: relative;
+			opacity: 1;
+
+			span {
+				width: 100%;
+				height: 100%;
+				border-radius: 50%;
+				background-color: rgba(#fff, .6);
+				position: absolute;
+				top: 0;
+				left: 0;
+				animation: sk-doubleBounce 1.5s infinite ease-in-out;
+
+				&:last-child {
+					animation-delay: -.75s;
+				}
+			}
+			&.invisible {
+				opacity: 0;
+				transition: opacity .2s ease-in-out .5s;
+			}
+		}
+	}
+
+	// Styles for the results section
+	&-results {
+
+		.subheading {
+			margin: 0;
+			padding: .5em 1.75rem;
+			border-bottom: 1px solid;
+			line-height: 2em;
+			font-size: 13px;
+			text-transform: uppercase;
+		}
+		.wp-menu-image {
+			margin-right: .125em;
+
+			&:before {
+				padding: 4px 0 0 0;
+				font-size: 16px;
+			}
+		}
+		ul {
+
+			&, li {
+				margin: 0;
+				padding: 0;
+			}
+			li {
+				border-bottom: 1px solid;
+			}
+			a {
+				display: block;
+				padding: .875em 1.75rem;
+				font-size: 1.125em;
+				text-decoration: none;
+				transition: none;
+			}
+			.proper-name {
+				display: block;
+				margin-top: .375em;
+				color: rgba(#fff, .3);
+				font-size: .75em;
+				text-transform: uppercase;
+				-webkit-font-smoothing: antialiased;
+			}
+			li.selected .proper-name {
+				color: rgba(#fff, .8);
+			}
+		}
+		li[data-target] {
+			padding: .625em 1.75rem;
+			cursor: pointer;
+			font-size: 1.125em;
+			-webkit-transition-property: border,background,color;
+			transition-property: border,background,color;
+			-webkit-transition-duration: .05s;
+			transition-duration: .05s;
+			-webkit-transition-timing-function: ease-in-out;
+			transition-timing-function: ease-in-out;
+
+			&:hover {
+				color: #00A0D2;
+			}
+		}
+		div[class*="dashicons"] {
+			display: inline-block;
+			vertical-align: middle;
+		}
+		li div[class*="dashicons"] {
+			position: relative;
+			top: -1px;
+		}
+
+	}
+
+}
+
+/*//////////////////////////////////////////////////////////////////////////////
+// Styles for color themes  ///////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////*/
+
+
+
+$themes: (
+	'fresh':     ( #23282D, #eee, #32373C, #fff,    rgba(#fff,.5), #bbb,                #444,            #333,            #0073AA,               #2b333b,               #00A0D2            ),
+	'light':     ( #F5F5F5, #444, #fff,    #000,    rgba(#000,.5), #333,                rgba(#000, .1),  rgba(#000, .12), #D64E07,               #E5E5E5,               #04A4CC            ),
+	'blue':      ( #4796B3, #444, #52ACCC, #fff,    rgba(#fff,.5), darken(#096484, 5%), rgba(#fff, .25), rgba(#fff, .3),  saturate(#E1A948, 30), #317D93,               #fff               ),
+	'coffee':    ( #46403C, #444, #59524C, #fff,    rgba(#fff,.5), #91867C,             rgba(#000, .1),  rgba(#000, .12), #C7A589,               saturate(#9EA476, 20), #59524C            ),
+	'ectoplasm': ( #413256, #444, #523F6D, #fff,    rgba(#fff,.5), rgba(#fff, .5),      rgba(#000, .1),  rgba(#000, .12), #D46F15,               #A3B745,               darken(#413256, 5) ),
+	'midnight':  ( #26292C, #444, #363B3F, #fff,    rgba(#fff,.5), rgba(#fff, .5),      rgba(#000, .1),  rgba(#000, .12), #E14D43,               #69A8BB,               darken(#26292C, 5) ),
+	'ocean':     ( #627C83, #444, #738E96, #23282D, rgba(#fff,.5), rgba(#fff, .5),      rgba(#000, .1),  rgba(#000, .12), #AA9D88,               saturate(#9EBAA0, 20), darken(#627C83, 5) ),
+	'sunrise':   ( #BE3631, #444, #CF4944, #fff,    rgba(#fff,.5), rgba(#fff, .5),      rgba(#000, .1),  rgba(#000, .12), #DD823B,               #CCAF0B,               darken(#BE3631, 5) )
+);
+
+@mixin modal_theme_colors( $theme_name, $colors ) {
+
+	$modal_bg: nth($colors, 1);
+	$modal_color: nth($colors, 2);
+
+	$search_bg: nth($colors, 3);
+	$search_color: nth($colors, 4);
+	$search_placeholder: nth($colors, 5);
+
+	$subheading_color: nth($colors, 6);
+	$subheading_border: nth($colors, 7);
+
+	$li_border: nth($colors, 8);
+
+	$link_color: nth($colors, 9);
+	$hover_bg: nth($colors, 10);
+	$hover_color: nth($colors, 11);
+
+	.admin-color-#{$theme_name} {
+
+		.acp {
+
+			&-modal {
+				background-color: $modal_bg;
+				color: $modal_color;
+
+				.search-container {
+					background-color: $search_bg;
+				}
+				input[type="search"] {
+					color: $search_color;
+
+					&::-webkit-input-placeholder {
+						color: $search_placeholder;
+					}
+				}
+			}
+			&-results {
+
+				.subheading {
+					color: $subheading_color;
+					border-bottom-color: $subheading_border;
+				}
+				ul li {
+					border-bottom-color: $li_border;
+
+					&:hover, &.selected {
+						background-color: $hover_bg;
+
+						a {
+							color: $hover_color;
+						}
+					}
+				}
+				a, li[data-target] {
+					color: $link_color;
+
+					&:hover {
+						color: $hover_color;
+					}
+				}
+			}
+		}
+
+	}
+
+}
+
+@each $theme_name, $colors in $themes {
+
+	@include modal_theme_colors($theme_name, $colors);
+
+}
+
+.admin-color {
+
+	// Coffee Theme
+	&-coffee {
+
+		.acp {
+
+			&-results {
+
+				.subheading {
+
+					.wp-menu-image:before {
+						color: #bbb;
+					}
+				}
+			}
+
+		}
+
+	}
+
+}
