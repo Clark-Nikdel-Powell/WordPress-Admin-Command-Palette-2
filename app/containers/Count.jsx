@@ -11,7 +11,7 @@ export default class Count extends Component {
         return (
             <header className="acp-results-count">
                 <span className="acp-count-info">
-                    <span className="amount">{this.props.count}</span> Result{this.props.count > 1 ? 's' : ''} <a className="clear" href="#" title="&#8984; + &#9003;" onClick={this.props.clearInput}>Clear</a>
+                    <span className="amount">{this.props.count}</span> Result{this.props.count === 1 ? '' : 's'} {this.props.search !== '' ? <a className="clear" title="&#8984; + &#9003;" onClick={this.props.clearInput}>Clear</a> : '' }
                 </span>
             </header>
         );
@@ -19,6 +19,7 @@ export default class Count extends Component {
 
     static propTypes = {
         count: PropTypes.number.isRequired,
+        search: PropTypes.string.isRequired,
         clearInput: PropTypes.func.isRequired,
     }
 }

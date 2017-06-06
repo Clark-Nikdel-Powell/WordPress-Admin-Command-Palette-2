@@ -2,6 +2,7 @@ import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import Results from './Results';
 import Count from './Count';
+import Help from './Help';
 
 export default class Modal extends Component {
 
@@ -29,11 +30,12 @@ export default class Modal extends Component {
                             onChange={this.props.updateInput}
                         />
                     </div>
-                    {
-                        this.props.count !== 0
-                            ? <Count count={this.props.count} clearInput={this.props.clearInput} />
-                            : null
-                    }
+                    <Count count={this.props.count} search={this.props.search} clearInput={this.props.clearInput} />
+                    <Help
+                        toggleHelp={this.props.toggleHelp}
+                        helpOpen={this.props.helpOpen}
+                        postTypes={this.props.postTypes}
+                    />
                     <Results
                         results={this.props.results}
                     />
@@ -49,5 +51,8 @@ export default class Modal extends Component {
         count: PropTypes.number.isRequired,
         clearInput: PropTypes.func.isRequired,
         results: PropTypes.array.isRequired,
+        toggleHelp: PropTypes.func.isRequired,
+        helpOpen: PropTypes.bool.isRequired,
+        postTypes: PropTypes.array.isRequired,
     }
 }

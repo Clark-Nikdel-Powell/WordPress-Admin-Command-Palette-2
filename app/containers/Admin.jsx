@@ -10,6 +10,7 @@ export default class Admin extends Component {
 
         this.state = {
             modalOpen: false,
+            helpOpen: false,
             search: '',
             results: [],
             count: 0,
@@ -17,6 +18,7 @@ export default class Admin extends Component {
     }
 
     componentDidMount() {
+        this.getHelpData();
         Mousetrap.bind('shift shift', () => this.revealModal(true));
         Mousetrap.bind('esc', () => this.revealModal(false));
     }
@@ -49,7 +51,7 @@ export default class Admin extends Component {
             return;
         }
 
-        fetch(`${acp_object.api_url}/?search=${this.state.search}`, {
+        fetch(`${acp_object.api_search_url}/?search=${this.state.search}`, {
             credentials: 'same-origin',
             method: 'GET',
             headers: {
@@ -62,6 +64,25 @@ export default class Admin extends Component {
                 (json) => this.setState({
                     results: json.results,
                     count: json.count,
+                }),
+                (err) => console.log('error', err)
+            );
+    };
+
+    getHelpData = () => {
+
+        fetch(`${acp_object.api_help_url}`, {
+            credentials: 'same-origin',
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-WP-Nonce': acp_object.api_nonce,
+            },
+        })
+            .then(response => response.json())
+            .then(
+                (json) => this.setState({
+                    postTypes: json.postTypes,
                 }),
                 (err) => console.log('error', err)
             );
@@ -89,14 +110,23 @@ export default class Admin extends Component {
         });
     };
 
+    toggleHelp = () => {
+
+        this.setState({
+            helpOpen: !this.state.helpOpen,
+        });
+    };
+
     render() {
 
         return (
             <div>
                 {
                     this.state.modalOpen
-                        ? <Modal closeModal={this.closeModal} search={this.state.search} results={this.state.results} count={this.state.count}
-                                 updateInput={this.updateInput} clearInput={this.clearInput}/>
+                        ? <Modal closeModal={this.closeModal} search={this.state.search} results={this.state.results}
+                                 count={this.state.count}
+                                 updateInput={this.updateInput} clearInput={this.clearInput}
+                                 toggleHelp={this.toggleHelp} helpOpen={this.state.helpOpen} postTypes={this.state.postTypes}/>
                         : null
                 }
             </div>

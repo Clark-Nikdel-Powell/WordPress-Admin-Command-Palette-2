@@ -79,7 +79,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 1em 1.375em;
+		padding: 1em 1.625rem;
 		color: #FFF;
 		font-size: 1.5em;
 		border-bottom: 1px solid #000;
@@ -116,6 +116,36 @@
 				transition: opacity .2s ease-in-out .5s;
 			}
 		}
+	}
+
+	// Styles for the help section
+	&-help {
+
+		&-trigger, &-items li {
+			padding: 1em 1.625rem;
+		}
+		&-trigger {
+			cursor: pointer;
+			display: block;
+			font-size: .875em;
+			font-weight: bold;
+			text-transform: uppercase;
+		}
+		&-items {
+			margin: 0;
+
+			li {
+				border-bottom: 1px solid;
+				margin-bottom: 0;
+			}
+		}
+		&-description {
+			display: block;
+			font-size: .875em;
+			font-style: italic;
+			margin-top: .125rem;
+		}
+
 	}
 
 	// Styles for the results section
@@ -245,6 +275,14 @@ $themes: (
 					&::-webkit-input-placeholder {
 						color: $search_placeholder;
 					}
+				}
+			}
+			&-help-items {
+				border-top: 1px solid $li_border;
+				color: rgba(#fff, .7);
+
+				li {
+					border-bottom-color: $li_border;
 				}
 			}
 			&-results {

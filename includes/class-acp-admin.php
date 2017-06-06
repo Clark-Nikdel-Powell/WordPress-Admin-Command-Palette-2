@@ -31,6 +31,9 @@ class ACP_Admin {
 	 */
 	protected $plugin_basename = null;
 
+	public $search_keyword_raw = '';
+	public $post_types = array();
+	public $search_keyword = '';
 
 	/**
 	 * Return an instance of this class.
@@ -85,79 +88,15 @@ class ACP_Admin {
 
 	public function register_rest_route() {
 
-		register_rest_route( $this->plugin_slug . '/v1', 'data', [
+		register_rest_route( $this->plugin_slug . '/v1', 'search', [
 			'methods'  => WP_REST_Server::READABLE,
 			'callback' => [ $this, 'get_search_results' ],
 		] );
-	}
 
-	public function parse_post_type_search_option( $search_keyword_raw ) {
-
-
-	}
-
-	public function get_search_results( WP_REST_Request $request ) {
-
-		$search_keyword_raw = $request->get_param( 'search' );
-
-		if ( empty( $search_keyword_raw ) ) {
-			return new WP_Error( 'no_search_keyword', __( 'A search keyword was not found.', 'acp' ) );
-		}
-
-		$post_type_statement = "AND post_type != 'revision'";
-
-		if ( 0 === strpos( $search_keyword_raw, ':' ) ) {
-
-			$first_space_pos = strpos( $search_keyword_raw, ' ' );
-			$post_types_str  = substr( $search_keyword_raw, 1, $first_space_pos - 1 );
-			$search_keyword  = substr( $search_keyword_raw, $first_space_pos + 1 );
-
-			if ( false !== strpos( $post_types_str, ',' ) ) {
-
-				$post_types_arr = explode( ',', $post_types_str );
-
-				foreach ( $post_types_arr as $post_type_index => $post_type ) {
-					$post_types_arr[ $post_type_index ] = "post_type = '$post_type'";
-				}
-
-				$post_type_statement = ' AND ( ' . implode( ' OR ', $post_types_arr ) . ' )';
-			} else {
-				$post_type_statement = " AND post_type = '$post_types_str'";
-			}
-		} else {
-			$search_keyword = $search_keyword_raw;
-		}
-
-		global $wpdb;
-
-		$query = $wpdb->prepare(
-			"SELECT ID, post_title, post_type FROM {$wpdb->prefix}posts WHERE post_title LIKE %s $post_type_statement LIMIT 10",
-			'%' . $wpdb->esc_like( $search_keyword ) . '%'
-		);
-
-		$results = $wpdb->get_results( $query );
-
-		foreach ( $results as $result ) {
-			$result->edit_url = get_edit_post_link( $result->ID, 'noencode' );
-		}
-
-		$total_count_arr = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT ID, post_title, post_type FROM {$wpdb->prefix}posts WHERE post_title LIKE %s $post_type_statement",
-				'%' . $wpdb->esc_like( $search_keyword ) . '%'
-			)
-		);
-
-		$total_count = count( $total_count_arr );
-
-		$return_data = [
-			'results' => $results,
-			'count'   => $total_count,
-		];
-
-		$response = new \WP_REST_Response( $return_data );
-
-		return $response;
+		register_rest_route( $this->plugin_slug . '/v1', 'help', [
+			'methods'  => WP_REST_Server::READABLE,
+			'callback' => [ $this, 'get_help_data' ],
+		] );
 	}
 
 	/**
@@ -183,8 +122,9 @@ class ACP_Admin {
 			wp_enqueue_script( $this->plugin_slug . '-admin-script', plugins_url( 'assets/js/admin.js', dirname( __FILE__ ) ), array( 'jquery' ), $this->version );
 
 			wp_localize_script( $this->plugin_slug . '-admin-script', 'acp_object', array(
-					'api_nonce' => wp_create_nonce( 'wp_rest' ),
-					'api_url'   => site_url( '/wp-json/' . $this->plugin_slug . '/v1/data/' ),
+					'api_nonce'      => wp_create_nonce( 'wp_rest' ),
+					'api_search_url' => site_url( '/wp-json/' . $this->plugin_slug . '/v1/search/' ),
+					'api_help_url'   => site_url( '/wp-json/' . $this->plugin_slug . '/v1/help/' ),
 				)
 			);
 		}
@@ -198,5 +138,106 @@ class ACP_Admin {
 	public function display_plugin_form_modal() {
 
 		echo '<div id="acp" class="acp"></div>';
+	}
+
+	public function get_search_post_types() {
+
+		$post_types         = [];
+		$search_keyword_arr = explode( ' ', $this->search_keyword_raw );
+
+		foreach ( $search_keyword_arr as $search_word ) {
+
+			if ( false !== strpos( $search_word, ':' ) ) {
+				$post_types[] = str_replace( ':', '', $search_word );
+			}
+		}
+
+		$this->post_types = $post_types;
+	}
+
+	public function clean_search_keyword() {
+
+		$search_keyword = $this->search_keyword_raw;
+
+		if ( ! empty( $this->post_types ) ) {
+
+			foreach ( $this->post_types as $post_type ) {
+				$search_keyword = str_replace( ':' . $post_type, '', $search_keyword );
+			}
+		}
+
+		$this->search_keyword = $search_keyword;
+	}
+
+	public function get_search_results( WP_REST_Request $request ) {
+
+		$this->search_keyword_raw = $request->get_param( 'search' );
+
+		if ( empty( $this->search_keyword_raw ) ) {
+			return new WP_Error( 'no_search_keyword', __( 'A search keyword was not found.', 'acp' ) );
+		}
+
+		if ( false !== strpos( $this->search_keyword_raw, ':' ) ) {
+			$this->get_search_post_types();
+		}
+
+		$this->clean_search_keyword();
+
+		$query_args = [
+			's'              => $this->search_keyword,
+			'posts_per_page' => 10,
+		];
+
+		if ( ! empty( $this->post_types ) ) {
+			$query_args['post_type'] = $this->post_types;
+		}
+
+		$search_query = new \WP_Query( $query_args );
+
+		if ( ! empty( $search_query->posts ) ) {
+
+			foreach ( $search_query->posts as $result_post ) {
+				$result_post->edit_url = get_edit_post_link( $result_post->ID, 'noencode' );
+			}
+
+			$results     = $search_query->posts;
+			$total_count = intval( $search_query->found_posts );
+		} else {
+			$results     = [];
+			$total_count = 0;
+		}
+
+		$return_data = [
+			'results' => $results,
+			'count'   => $total_count,
+			'args'    => $query_args,
+		];
+
+		$response = new \WP_REST_Response( $return_data );
+
+		return $response;
+	}
+
+	public function get_help_data() {
+
+		$post_types_arr = array();
+
+		$args = [
+			'public' => true,
+		];
+
+		$post_types = get_post_types( $args );
+
+		foreach ( $post_types as $post_type_name ) {
+			$post_types_arr[] = $post_type_name;
+		}
+
+		$return_data = [
+			'postTypes' => $post_types_arr,
+		];
+
+		$response = new \WP_REST_Response( $return_data );
+
+		return $response;
 	}
 }
