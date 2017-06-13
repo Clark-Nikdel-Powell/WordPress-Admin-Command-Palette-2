@@ -145,6 +145,19 @@
 			font-style: italic;
 			margin-top: .125rem;
 		}
+		ul.acp-help-description {
+			margin-left: -1.625rem;
+			margin-right: -1.625rem;
+			margin-bottom: -.8125rem;
+
+			li {
+				padding: .75em 2.5rem;
+
+				&:last-child {
+					border-bottom: none;
+				}
+			}
+		}
 
 	}
 
@@ -183,7 +196,7 @@
 				text-decoration: none;
 				transition: none;
 			}
-			.proper-name {
+			.acp-subtitle {
 				display: block;
 				margin-top: .375em;
 				color: rgba(#fff, .3);

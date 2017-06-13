@@ -13,9 +13,9 @@ export default class Results extends Component {
 
         return (
             <li key={key}>
-                <a href={result.edit_url}>
-                    <div>{result.post_title}</div>
-                    <small className="proper-name">{result.post_type}</small>
+                <a href={result.url}>
+                    <div>{result.title}</div>
+                    <small className="acp-subtitle"><strong>{result.object_type}</strong>{result.subtitle}</small>
                 </a>
             </li>
         )

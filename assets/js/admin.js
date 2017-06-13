@@ -13381,7 +13381,7 @@ var Admin = function (_Component) {
                 return;
             }
 
-            (0, _isomorphicFetch2.default)(acp_object.api_search_url + '/?search=' + _this.state.search, {
+            (0, _isomorphicFetch2.default)(acp_object.api_search_url + '/?command=' + _this.state.search, {
                 credentials: 'same-origin',
                 method: 'GET',
                 headers: {
@@ -13394,26 +13394,6 @@ var Admin = function (_Component) {
                 return _this.setState({
                     results: json.results,
                     count: json.count
-                });
-            }, function (err) {
-                return console.log('error', err);
-            });
-        };
-
-        _this.getHelpData = function () {
-
-            (0, _isomorphicFetch2.default)('' + acp_object.api_help_url, {
-                credentials: 'same-origin',
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-WP-Nonce': acp_object.api_nonce
-                }
-            }).then(function (response) {
-                return response.json();
-            }).then(function (json) {
-                return _this.setState({
-                    postTypes: json.postTypes
                 });
             }, function (err) {
                 return console.log('error', err);
@@ -13454,7 +13434,8 @@ var Admin = function (_Component) {
             helpOpen: false,
             search: '',
             results: [],
-            count: 0
+            count: 0,
+            postTypes: acp_object.helpData.postTypes
         };
         return _this;
     }
@@ -13464,7 +13445,6 @@ var Admin = function (_Component) {
         value: function componentDidMount() {
             var _this2 = this;
 
-            this.getHelpData();
             _mousetrap2.default.bind('shift shift', function () {
                 return _this2.revealModal(true);
             });
@@ -13700,7 +13680,8 @@ var Help = function (_Component) {
                 _react2.default.createElement(
                     'a',
                     { className: 'acp-help-trigger', onClick: this.props.toggleHelp },
-                    'Help'
+                    'Help ',
+                    this.props.helpOpen === true ? '-' : '+'
                 ),
                 this.props.helpOpen ? _react2.default.createElement(
                     'ul',
@@ -13728,6 +13709,29 @@ var Help = function (_Component) {
                             'span',
                             { className: 'acp-help-text' },
                             'Use "-" to do a negative search.'
+                        )
+                    ),
+                    _react2.default.createElement(
+                        'li',
+                        null,
+                        _react2.default.createElement(
+                            'span',
+                            { className: 'acp-help-text' },
+                            'Use "/" to send a command. Available commands are:'
+                        ),
+                        _react2.default.createElement(
+                            'ul',
+                            { className: 'acp-help-description' },
+                            _react2.default.createElement(
+                                'li',
+                                null,
+                                '"/ap": Activate an inactive plugin.'
+                            ),
+                            _react2.default.createElement(
+                                'li',
+                                null,
+                                '"/dp": Deactivate an active plugin.'
+                            )
                         )
                     ),
                     _react2.default.createElement(
@@ -13925,16 +13929,21 @@ var Results = function (_Component) {
                 { key: key },
                 _react2.default.createElement(
                     'a',
-                    { href: result.edit_url },
+                    { href: result.url },
                     _react2.default.createElement(
                         'div',
                         null,
-                        result.post_title
+                        result.title
                     ),
                     _react2.default.createElement(
                         'small',
-                        { className: 'proper-name' },
-                        result.post_type
+                        { className: 'acp-subtitle' },
+                        _react2.default.createElement(
+                            'strong',
+                            null,
+                            result.object_type
+                        ),
+                        result.subtitle
                     )
                 )
             );

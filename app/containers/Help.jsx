@@ -10,7 +10,7 @@ export default class Help extends Component {
     render() {
         return (
             <div className="acp-help">
-                <a className="acp-help-trigger" onClick={this.props.toggleHelp}>Help</a>
+                <a className="acp-help-trigger" onClick={this.props.toggleHelp}>Help {this.props.helpOpen === true ? '-' : '+'}</a>
                 {
                     this.props.helpOpen
                         ? <ul className="acp-help-items">
@@ -20,6 +20,13 @@ export default class Help extends Component {
                                 className="acp-help-description">Available post types: {this.props.postTypes.join(', ')}</span>
                         </li>
                         <li><span className="acp-help-text">Use "-" to do a negative search.</span></li>
+                        <li>
+                            <span className="acp-help-text">Use "/" to send a command. Available commands are:</span>
+                            <ul className="acp-help-description">
+                                <li>"/ap": Activate an inactive plugin.</li>
+                                <li>"/dp": Deactivate an active plugin.</li>
+                            </ul>
+                        </li>
                         <li><span className="acp-help-text">Press <kbd>esc</kbd> or click on the overlay to close the modal.</span>
                         </li>
                     </ul>

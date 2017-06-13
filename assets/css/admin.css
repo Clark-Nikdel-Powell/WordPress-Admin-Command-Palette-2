@@ -104,6 +104,14 @@
   font-size: .875em;
   font-style: italic;
   margin-top: .125rem; }
+.acp-help ul.acp-help-description {
+  margin-left: -1.625rem;
+  margin-right: -1.625rem;
+  margin-bottom: -.8125rem; }
+  .acp-help ul.acp-help-description li {
+    padding: .75em 2.5rem; }
+    .acp-help ul.acp-help-description li:last-child {
+      border-bottom: none; }
 .acp-results .subheading {
   margin: 0;
   padding: .5em 1.75rem;
@@ -127,7 +135,7 @@
   font-size: 1.125em;
   text-decoration: none;
   transition: none; }
-.acp-results ul .proper-name {
+.acp-results ul .acp-subtitle {
   display: block;
   margin-top: .375em;
   color: rgba(255, 255, 255, 0.3);
