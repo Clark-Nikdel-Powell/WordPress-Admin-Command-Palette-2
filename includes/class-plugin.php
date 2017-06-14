@@ -1,4 +1,5 @@
 <?php
+namespace ACP;
 /**
  * ACP
  *
@@ -11,7 +12,7 @@
 /**
  * @package ACP
  */
-class ACP {
+class Plugin {
 
 	/**
 	 * The variable name is used as the text domain when internationalizing strings

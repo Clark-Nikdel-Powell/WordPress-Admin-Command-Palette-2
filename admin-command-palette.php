@@ -1,4 +1,5 @@
 <?php
+namespace ACP;
 /**
  * Admin Command Palette
  *
@@ -26,8 +27,10 @@ if ( ! defined( 'WPINC' ) ) {
 define( 'ADMIN_COMMAND_PALETTE_VERSION', '2.0.0' );
 
 
-require_once( plugin_dir_path( __FILE__ ) . 'includes/class-acp.php' );
-require_once( plugin_dir_path( __FILE__ ) . 'includes/class-acp-admin.php' );
+require_once( plugin_dir_path( __FILE__ ) . 'includes/class-plugin.php' );
+require_once( plugin_dir_path( __FILE__ ) . 'includes/class-admin.php' );
+require_once( plugin_dir_path( __FILE__ ) . 'includes/class-search.php' );
+require_once( plugin_dir_path( __FILE__ ) . 'includes/class-data-template.php' );
 
 /**
  * Initialize Plugin
@@ -35,10 +38,11 @@ require_once( plugin_dir_path( __FILE__ ) . 'includes/class-acp-admin.php' );
  * @since 0.8.0
  */
 function admin_command_palette_init() {
-	$wpr = ACP::get_instance();
-	$wpr_admin = ACP_Admin::get_instance();
+	$acp = Plugin::get_instance();
+	$acp_admin = Admin::get_instance();
+	$acp_search = Search::get_instance();
 }
-add_action( 'plugins_loaded', 'admin_command_palette_init' );
+add_action( 'plugins_loaded', 'ACP\admin_command_palette_init' );
 
 /**
  * Register activation and deactivation hooks

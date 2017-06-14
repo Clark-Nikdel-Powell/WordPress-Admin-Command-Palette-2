@@ -1,22 +1,10 @@
 <?php
-/**
- * ACP
- *
- *
- * @package   Admin Command Palette
- * @author    jhned
- * @license   GPL-3.0
- */
+namespace ACP;
 
-/**
- * @subpackage ACP_Admin
- */
-class ACP_Admin {
+class Search {
 
 	/**
 	 * Instance of this class.
-	 *
-	 * @since    0.8.0
 	 *
 	 * @var      object
 	 */
@@ -24,8 +12,6 @@ class ACP_Admin {
 
 	/**
 	 * Plugin basename.
-	 *
-	 * @since    0.8.0
 	 *
 	 * @var      string
 	 */
@@ -44,8 +30,6 @@ class ACP_Admin {
 	/**
 	 * Return an instance of this class.
 	 *
-	 * @since     0.8.0
-	 *
 	 * @return    object    A single instance of this class.
 	 */
 	public static function get_instance() {
@@ -62,99 +46,33 @@ class ACP_Admin {
 	/**
 	 * Initialize the plugin by loading admin scripts & styles and adding a
 	 * settings page and menu.
-	 *
-	 * @since     0.8.0
 	 */
 	private function __construct() {
-		$plugin            = ACP::get_instance();
+		$plugin            = Plugin::get_instance();
 		$this->plugin_slug = $plugin->get_plugin_slug();
 		$this->version     = $plugin->get_plugin_version();
 
 		$this->plugin_basename = plugin_basename( plugin_dir_path( realpath( dirname( __FILE__ ) ) ) . $this->plugin_slug . '.php' );
 	}
 
-
 	/**
 	 * Handle WP actions and filters.
-	 *
-	 * @since    0.8.0
 	 */
 	private function do_hooks() {
 
 		// Register the REST API route.
 		add_action( 'rest_api_init', [ $this, 'register_rest_route' ], 20 );
-
-		// Load admin style sheet and JavaScript.
-		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_styles' ], 20 );
-		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_scripts' ], 20 );
-
-		// Render the markup for the modal
-		add_action( 'admin_footer', [ $this, 'display_plugin_form_modal' ], 20 );
 	}
 
+	/**
+	 * Register the REST API route.
+	 */
 	public function register_rest_route() {
 
 		register_rest_route( $this->plugin_slug . '/v1', 'search', [
-			'methods'  => WP_REST_Server::READABLE,
+			'methods'  => \WP_REST_Server::READABLE,
 			'callback' => [ $this, 'determine_command_type' ],
 		] );
-	}
-
-	/**
-	 * Register and enqueue admin-specific style sheet.
-	 *
-	 * @since     0.8.0
-	 */
-	public function enqueue_admin_styles() {
-
-		if ( ! is_customize_preview() ) {
-			wp_enqueue_style( $this->plugin_slug . '-style', plugins_url( 'assets/css/admin.css', dirname( __FILE__ ) ), array(), $this->version );
-		}
-	}
-
-	/**
-	 * Register and enqueue admin-specific javascript
-	 *
-	 * @since     0.8.0
-	 */
-	public function enqueue_admin_scripts() {
-
-		if ( ! is_customize_preview() ) {
-			wp_enqueue_script( $this->plugin_slug . '-admin-script', plugins_url( 'assets/js/admin.js', dirname( __FILE__ ) ), array( 'jquery' ), $this->version );
-
-			$post_types_arr = array();
-
-			$args = [
-				'public' => true,
-			];
-
-			$post_types = get_post_types( $args );
-
-			foreach ( $post_types as $post_type_name ) {
-				$post_types_arr[] = $post_type_name;
-			}
-
-			$help_data = [
-				'postTypes' => $post_types_arr,
-			];
-
-			wp_localize_script( $this->plugin_slug . '-admin-script', 'acp_object', array(
-					'api_nonce'      => wp_create_nonce( 'wp_rest' ),
-					'api_search_url' => site_url( '/wp-json/' . $this->plugin_slug . '/v1/search/' ),
-					'helpData'       => $help_data,
-				)
-			);
-		}
-	}
-
-	/**
-	 * Render the settings page for this plugin.
-	 *
-	 * @since    0.8.0
-	 */
-	public function display_plugin_form_modal() {
-
-		echo '<div id="acp" class="acp"></div>';
 	}
 
 	/**
@@ -164,16 +82,16 @@ class ACP_Admin {
 	 * where we then figure out what type of command type we're dealing with. Most of the time it'll be a
 	 * search, but there are special commands for activating/deactivating plugins.
 	 *
-	 * @param WP_REST_Request $request
+	 * @param \WP_REST_Request $request
 	 *
-	 * @return WP_Error|WP_REST_Response
+	 * @return \WP_Error|\WP_REST_Response
 	 */
-	public function determine_command_type( WP_REST_Request $request ) {
+	public function determine_command_type( \WP_REST_Request $request ) {
 
 		$this->command_raw = $request->get_param( 'command' );
 
 		if ( empty( $this->command_raw ) ) {
-			return new WP_Error( 'no_command_found', __( 'A command was not found.', 'acp' ) );
+			return new \WP_Error( 'no_command_found', __( 'A command was not found.', 'acp' ) );
 		}
 
 		if ( false !== strpos( $this->command_raw, '/' ) ) {
@@ -263,8 +181,9 @@ class ACP_Admin {
 
 		if ( false !== strpos( $this->command_raw, ':' ) ) {
 			$this->get_search_post_types();
-			$this->clean_search_keyword();
 		}
+
+		$this->clean_search_keyword();
 
 		$query_args = [
 			's'              => $this->search_keyword,
@@ -298,25 +217,16 @@ class ACP_Admin {
 					$subtitle = $this->get_hierarchical_subtitle( $result_post );
 				}
 
-				$results[] = [
-					'title'       => $title,
-					'object_type' => $post_type,
-					'subtitle'    => $subtitle,
-					'url'         => $url,
-				];
+				$results[] = new Data_Template( $title, $post_type, $subtitle, $url );
 			}
 
 			$total_count = intval( $search_query->found_posts );
 		}
 
-		$admin_pages = $this->get_matching_admin_pages();
-		if ( ! empty( $admin_pages ) ) {
-			$results = array_merge( $results, $admin_pages );
-		}
-
 		$this->return_data = [
 			'results' => $results,
 			'count'   => $total_count,
+			'args'    => $query_args,
 		];
 	}
 
@@ -354,7 +264,10 @@ class ACP_Admin {
 	/**
 	 * get_search_post_types
 	 *
-	 * Parses the search keyword
+	 * Parses the search keyword for post types, taxonomies or users.
+	 * ":pt" for post type, e.g. ":pt=page".
+	 * ":t" for taxonomy, e.g. ":t=category".
+	 * ":u" for user, e.g. ":u". No equal sign required.
 	 */
 	public function get_search_post_types() {
 
@@ -383,117 +296,5 @@ class ACP_Admin {
 		}
 
 		$this->search_keyword = $search_keyword;
-	}
-
-	public function get_matching_admin_pages() {
-
-		// TODO: the globals aren't accessible because we're in a REST API call, it thinks we're not in the admin. We'll need to cache them in a transient or an option with an admin hook and reference against that array here.
-		$admin_pages = [];
-
-		// Get the admin menu.
-		global $menu;
-
-		// Get the admin submenu items.
-		global $submenu;
-
-		// Keep these separate so that we don't accidentally modify it.
-		$admin_menu_arr    = $menu;
-		$admin_submenu_arr = $submenu;
-
-		if ( ! empty( $admin_menu_arr ) ) {
-
-			// Loop through the admin pages and add the data to an array.
-			foreach ( $admin_menu_arr as $menu_order => $admin_menu_item ) {
-
-				// If this is a separator, then we don't need it.
-				if ( 'wp-menu-separator' === $admin_menu_item[4] ) {
-					continue;
-				}
-
-				$menu_title = $admin_menu_item[0];
-				$menu_url   = $admin_menu_item[2];
-
-				// Clean the title
-				$span_position = strpos( $menu_title, ' <span' );
-
-				if ( 0 !== $span_position ) {
-					$menu_title = substr( $menu_title, 0, $span_position );
-				}
-
-				// Add the admin page to the array
-				$template['title']       = $menu_title;
-				$template['url']         = $menu_url;
-				$template['object_type'] = 'Admin Page';
-
-				$admin_pages[] = $template;
-			}
-		}
-
-		if ( ! empty( $admin_submenu_arr ) ) {
-
-			// Loop through the admin submenu pages and add the data to an array.
-			foreach ( $admin_submenu_arr as $parent_slug => $admin_submenu_items ) {
-
-				// The submenu pages are grouped in sub-arrays under the parent slug, hence the extra loop.
-				foreach ( $admin_submenu_items as $menu_order => $admin_submenu_item ) {
-
-					$submenu_title = $admin_submenu_item[0];
-					$submenu_url   = $admin_submenu_item[2];
-
-					// When dealing with a submenu URL, if there isn't a .php suffix,
-					// then the full URL is built based on the parent slug.
-					if ( false === strpos( $submenu_url, '.php' ) ) {
-						$submenu_url = $parent_slug . '?page=' . $admin_submenu_item[2];
-					}
-
-					// If "Add" is present, we need to append the post type name to the title for context.
-					if ( false !== strpos( $submenu_title, 'Add' ) && 0 !== strpos( $submenu_url, 'post_type=' ) ) {
-
-						$equal_position = strpos( $submenu_url, '=' );
-
-						$submenu_post_type_slug = substr( $submenu_url, $equal_position + 1 );
-
-						$submenu_title .= ' ' . ucfirst( $submenu_post_type_slug );
-					}
-
-					// Don't include the dashboard twice
-					if ( 'index.php' === $submenu_url ) {
-						continue;
-					}
-
-					// A couple of special cases for title
-					if ( 'post-new.php' === $submenu_url ) {
-						$submenu_title .= ' Post';
-					}
-					if ( 'upload.php' === $submenu_url ) {
-						continue;
-					}
-					if ( 'media-new.php' === $submenu_url ) {
-						$submenu_title .= ' Attachment';
-					}
-					if ( 'plugin-install.php' === $submenu_url ) {
-						$submenu_title .= ' Plugin';
-					}
-					if ( 'user-new.php' === $submenu_url ) {
-						$submenu_title .= ' User';
-					}
-
-					// Clean the title
-					$span_position = strpos( $submenu_title, ' <span' );
-
-					if ( 0 !== $span_position ) {
-						$submenu_title = substr( $submenu_title, 0, $span_position );
-					}
-
-					$template['title'] = $submenu_title;
-					$template['url']   = $submenu_url;
-					$template['name']  = 'admin-page';
-
-					$admin_pages[] = $template;
-				} // End foreach().
-			} // End foreach().
-		} // End if().
-
-		return $admin_pages;
 	}
 }
