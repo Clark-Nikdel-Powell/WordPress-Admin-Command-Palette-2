@@ -53,15 +53,8 @@ unset( $post_types['revision'] );
 
 						$checked = '';
 
-						if ( '' === $included_post_types || empty( $included_post_types ) ) {
-
-							if ( 'page' === $post_type_slug || 'post' === $post_type_slug ) {
-								$checked = 'checked';
-							}
-						} else {
-							if ( isset( $included_post_types[ $post_type_slug ] ) && '1' === $included_post_types[ $post_type_slug ] ) {
-								$checked = 'checked';
-							}
+						if ( isset( $included_post_types[ $post_type_slug ] ) && '1' === $included_post_types[ $post_type_slug ] ) {
+							$checked = 'checked';
 						}
 
 						// Add count number to label
@@ -96,16 +89,8 @@ unset( $post_types['revision'] );
 
 						$checked = '';
 
-						if ( '' === $included_taxonomies || empty( $included_taxonomies ) ) {
-
-							if ( 'category' === $taxonomy_slug || 'post_tag' === $taxonomy_slug ) {
-								$checked = 'checked';
-							}
-						} else {
-
-							if ( isset( $included_taxonomies[ $taxonomy_slug ] ) && '1' === $included_taxonomies[ $taxonomy_slug ] ) {
-								$checked = 'checked';
-							}
+						if ( isset( $included_taxonomies[ $taxonomy_slug ] ) && '1' === $included_taxonomies[ $taxonomy_slug ] ) {
+							$checked = 'checked';
 						}
 
 						// Add count number to label

@@ -1,4 +1,5 @@
 <?php
+
 namespace ACP;
 /**
  * ACP
@@ -67,6 +68,21 @@ class Plugin {
 	 * @since    2.0.0
 	 */
 	public static function activate() {
+		$included_posts_types = get_option( 'acp_included_post_types' );
+		$included_taxonomies  = get_option( 'acp_included_taxonomies' );
+
+		if ( empty( $included_posts_types ) ) {
+			update_option( 'acp_included_post_types', [
+				'page' => '1',
+				'post' => '1',
+			] );
+		}
+		if ( empty( $included_taxonomies ) ) {
+			update_option( 'acp_included_taxonomies', [
+				'category' => '1',
+				'post_tag' => '1',
+			] );
+		}
 	}
 
 	/**

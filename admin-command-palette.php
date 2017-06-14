@@ -47,6 +47,6 @@ add_action( 'plugins_loaded', 'ACP\admin_command_palette_init' );
 /**
  * Register activation and deactivation hooks
  */
-register_activation_hook( __FILE__, array( 'ACP', 'activate' ) );
-register_deactivation_hook( __FILE__, array( 'ACP', 'deactivate' ) );
+register_activation_hook( __FILE__, array( 'ACP\Plugin', 'activate' ) );
+register_deactivation_hook( __FILE__, array( 'ACP\Plugin', 'deactivate' ) );
 
