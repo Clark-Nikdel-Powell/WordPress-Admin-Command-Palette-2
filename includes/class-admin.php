@@ -14,6 +14,8 @@ namespace ACP;
  */
 class Admin {
 
+	public $admin_pages_transient_name = 'acp_admin_pages';
+
 	/**
 	 * Instance of this class.
 	 *
@@ -56,7 +58,6 @@ class Admin {
 		$this->plugin_basename = plugin_basename( plugin_dir_path( realpath( dirname( __FILE__ ) ) ) . $this->plugin_slug . '.php' );
 	}
 
-
 	/**
 	 * Handle WP actions and filters.
 	 */
@@ -74,6 +75,14 @@ class Admin {
 
 		// Add the Options Page
 		add_action( 'admin_menu', [ $this, 'add_options_page' ], 20 );
+
+		// Preload Admin Pages as Transient. NOTE: the action priority matters here.
+		add_action( 'admin_init', [ $this, 'preload_admin_menu_pages_as_transient' ], 21 );
+
+		// Clear Admin Pages Transient
+		add_action( 'activated_plugin', [ $this, 'clear_admin_menu_pages_transient' ], 20 );
+		add_action( 'deactivated_plugin', [ $this, 'clear_admin_menu_pages_transient' ], 20 );
+		add_action( 'after_switch_theme', [ $this, 'clear_admin_menu_pages_transient' ], 20 );
 	}
 
 	/**
@@ -142,9 +151,21 @@ class Admin {
 		}
 	}
 
-	public function get_matching_admin_pages() {
+	/**
+	 * Preloads the admin menu pages, since the $menu and $submenu globals aren't available during a REST API call.
+	 *
+	 * @return array
+	 */
+	public function preload_admin_menu_pages_as_transient() {
 
-		// TODO: the globals aren't accessible because we're in a REST API call, it thinks we're not in the admin. We'll need to cache them in a transient or an option with an admin hook and reference against that array here.
+		$cached_admin_pages = get_transient( $this->admin_pages_transient_name );
+
+		if ( empty( $cached_admin_pages ) ) {
+			delete_transient( $this->admin_pages_transient_name );
+		} else {
+			return $cached_admin_pages;
+		}
+
 		$admin_pages = [];
 
 		// Get the admin menu.
@@ -173,7 +194,7 @@ class Admin {
 				// Clean the title
 				$span_position = strpos( $menu_title, ' <span' );
 
-				if ( 0 !== $span_position ) {
+				if ( false !== $span_position ) {
 					$menu_title = substr( $menu_title, 0, $span_position );
 				}
 
@@ -187,10 +208,47 @@ class Admin {
 			// Loop through the admin submenu pages and add the data to an array.
 			foreach ( $admin_submenu_arr as $parent_slug => $admin_submenu_items ) {
 
+				$submenu_prefix = '';
+
+				if ( 'index.php' === $parent_slug ) {
+					$submenu_prefix = 'Dashboard';
+				}
+				if ( 'upload.php' === $parent_slug ) {
+					$submenu_prefix = 'Media';
+				}
+				if ( 'link-manager.php' === $parent_slug ) {
+					$submenu_prefix = 'Links';
+				}
+				if ( 'edit.php' === $parent_slug ) {
+					$submenu_prefix = 'Posts';
+				}
+				if ( 'edit.php?post_type=page' === $parent_slug ) {
+					$submenu_prefix = 'Pages';
+				}
+				if ( 'themes.php' === $parent_slug ) {
+					$submenu_prefix = 'Appearance';
+				}
+				if ( 'plugins.php' === $parent_slug ) {
+					$submenu_prefix = 'Plugins';
+				}
+				if ( 'users.php' === $parent_slug ) {
+					$submenu_prefix = 'Users';
+				}
+				if ( 'tools.php' === $parent_slug ) {
+					$submenu_prefix = 'Tools';
+				}
+				if ( 'options-general.php' === $parent_slug ) {
+					$submenu_prefix = 'Settings';
+				}
+
+				if ( '' !== $submenu_prefix ) {
+					$submenu_prefix .= ' / ';
+				}
+
 				// The submenu pages are grouped in sub-arrays under the parent slug, hence the extra loop.
 				foreach ( $admin_submenu_items as $menu_order => $admin_submenu_item ) {
 
-					$submenu_title = $admin_submenu_item[0];
+					$submenu_title = $submenu_prefix . $admin_submenu_item[0];
 					$submenu_url   = $admin_submenu_item[2];
 
 					// When dealing with a submenu URL, if there isn't a .php suffix,
@@ -204,9 +262,11 @@ class Admin {
 
 						$equal_position = strpos( $submenu_url, '=' );
 
-						$submenu_post_type_slug = substr( $submenu_url, $equal_position + 1 );
+						if ( false !== $equal_position ) {
+							$submenu_post_type_slug = substr( $submenu_url, $equal_position + 1 );
 
-						$submenu_title .= ' ' . ucfirst( $submenu_post_type_slug );
+							$submenu_title .= ' ' . ucfirst( $submenu_post_type_slug );
+						}
 					}
 
 					// Don't include the dashboard twice
@@ -234,15 +294,22 @@ class Admin {
 					// Clean the title
 					$span_position = strpos( $submenu_title, ' <span' );
 
-					if ( 0 !== $span_position ) {
+					if ( false !== $span_position ) {
 						$submenu_title = substr( $submenu_title, 0, $span_position );
 					}
 
 					$admin_pages[] = new Data_Template( $submenu_title, 'Admin Page', '', $submenu_url );
+
 				} // End foreach().
 			} // End foreach().
 		} // End if().
 
+		set_transient( $this->admin_pages_transient_name, $admin_pages, 24 * HOUR_IN_SECONDS );
+
 		return $admin_pages;
+	}
+
+	public function clear_admin_menu_pages_transient() {
+		delete_transient( $this->admin_pages_transient_name );
 	}
 }

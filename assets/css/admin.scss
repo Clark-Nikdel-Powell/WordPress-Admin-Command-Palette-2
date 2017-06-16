@@ -80,9 +80,9 @@
 		align-items: center;
 		justify-content: space-between;
 		padding: 1em 1.625rem;
+		border-bottom: 1px solid rgba(#fff, .1);
 		color: #FFF;
 		font-size: 1.5em;
-		border-bottom: 1px solid #000;
 
 		.clear {
 			margin-left: .5em;
@@ -164,6 +164,9 @@
 	// Styles for the results section
 	&-results {
 
+		&-container {
+			border-top: 1px solid #000;
+		}
 		.subheading {
 			margin: 0;
 			padding: .5em 1.75rem;

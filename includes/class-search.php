@@ -1,4 +1,5 @@
 <?php
+
 namespace ACP;
 
 class Search {
@@ -17,10 +18,12 @@ class Search {
 	 */
 	protected $plugin_basename = null;
 
+	public $results_max = 10;
 	public $command_raw = '';
 	public $command_type = '';
 	public $action_name = '';
-	public $post_types = array();
+	public $filter_name = '';
+	public $content_types = [];
 	public $search_keyword = '';
 	public $return_data = [
 		'results' => [],
@@ -99,9 +102,16 @@ class Search {
 			$this->determine_action();
 		}
 
+		if ( false !== strpos( $this->command_raw, ':' ) ) {
+			$this->command_type = 'filtered_search';
+			$this->determine_filter();
+			$this->run_search_queries();
+		}
+
 		if ( '' === $this->command_type ) {
-			$this->command_type = 'search';
-			$this->get_search_results();
+			$this->command_type   = 'search';
+			$this->search_keyword = $this->command_raw;
+			$this->run_search_queries();
 		}
 
 		$response = new \WP_REST_Response( $this->return_data );
@@ -149,20 +159,12 @@ class Search {
 			if ( 'activate_plugin' === $this->action_name && ! is_plugin_active( $plugin_file ) ) {
 				$url = str_replace( '&amp;', '&', wp_nonce_url( 'plugins.php?action=activate&amp;plugin=' . $plugin_file . '&amp;plugin_status=all&amp;paged=1&amp;s=', 'activate-plugin_' . $plugin_file ) );
 
-				$plugin_links[] = [
-					'title'       => $plugin_array['Name'],
-					'object_type' => 'plugin',
-					'url'         => $url,
-				];
+				$plugin_links[] = new Data_Template( $plugin_array['Name'], 'plugin', '', $url );
 			}
 			if ( 'deactivate_plugin' === $this->action_name && is_plugin_active( $plugin_file ) ) {
 				$url = str_replace( '&amp;', '&', wp_nonce_url( 'plugins.php?action=deactivate&amp;plugin=' . $plugin_file . '&amp;plugin_status=all&amp;paged=1&amp;s=', 'deactivate-plugin_' . $plugin_file ) );
 
-				$plugin_links[] = [
-					'title'       => $plugin_array['Name'],
-					'object_type' => 'plugin',
-					'url'         => $url,
-				];
+				$plugin_links[] = new Data_Template( $plugin_array['Name'], 'plugin', '', $url );
 			}
 		}
 
@@ -172,62 +174,280 @@ class Search {
 		];
 	}
 
-	/**
-	 * get_search_results
+	/*
+	 * determine_filter
 	 *
-	 * Builds a search query to return posts data based on the search.
+	 * Figures out which filtered search we're using.
+	 * ":pt" for post type, e.g. ":pt=page".
+	 * ":t" for taxonomy, e.g. ":t=category".
+	 * ":u" for user, e.g. ":u". No equal sign required.
+	 * ":am" for admin menu, e.g. ":am". No equal sign required.
 	 */
-	public function get_search_results() {
+	public function determine_filter() {
 
-		if ( false !== strpos( $this->command_raw, ':' ) ) {
-			$this->get_search_post_types();
+		// e.g., ":pt=page what" or ":pt=page,post what"
+		if ( false !== strpos( $this->command_raw, ':pt=' ) ) {
+			$this->filter_name = ':pt=';
+			$this->get_search_content_types();
+		}
+		if ( false !== strpos( $this->command_raw, ':t=' ) ) {
+			$this->filter_name = ':t=';
+			$this->get_search_content_types();
+		}
+		if ( false !== strpos( $this->command_raw, ':u' ) ) {
+			$this->filter_name = ':u';
+		}
+		if ( false !== strpos( $this->command_raw, ':am' ) ) {
+			$this->filter_name = ':am';
 		}
 
-		$this->clean_search_keyword();
+		if ( '' !== $this->filter_name ) {
+			$this->clean_search_keyword();
+		}
+	}
+
+	/**
+	 * get_search_content_types
+	 *
+	 * Parses the search keyword for post types, taxonomies or users.
+	 */
+	public function get_search_content_types() {
+
+		$content_types = [];
+
+		/**
+		 * E.g., ":pt=page,post what is love?" becomes:
+		 * array(
+		 *  :pt=page,post,
+		 *  what,
+		 *  is,
+		 *  love?,
+		 * )
+		 */
+		$search_keyword_arr = explode( ' ', $this->command_raw );
+
+		foreach ( $search_keyword_arr as $search_word ) {
+
+			// Match found for :pt=page,post.
+			if ( false !== strpos( $search_word, $this->filter_name ) ) {
+
+				// Now shortened to page,post.
+				$content_types_str = str_replace( $this->filter_name, '', $search_word );
+
+				// E.g., "page,post" or just "page".
+				if ( false !== strpos( ',', $content_types_str ) ) {
+
+					// Now "page,post" becomes array(page, post).
+					$content_types_arr = explode( ',', $content_types_str );
+
+					// Added with a foreach in case there are multiple filters in the raw command.
+					// E.g., ":pt=page :pt=post what is love?"
+					foreach ( $content_types_arr as $content_type ) {
+						$content_types[] = $content_type;
+					}
+				} else {
+					// E.g., page.
+					$content_types[] = $content_types_str;
+				}
+			}
+		}
+
+		$this->content_types = $content_types;
+	}
+
+	/**
+	 * Remove filters from the search keyword.
+	 * E.g., input is ":pt=page,post what is love?" for a post-type search.
+	 * Output is "what is love?".
+	 */
+	public function clean_search_keyword() {
+
+		$search_keyword = $this->command_raw;
+
+		// Replace the filter name first. e.g., ":pt=".
+		if ( '' !== $this->filter_name ) {
+			$search_keyword = str_replace( $this->filter_name, '', $search_keyword );
+		}
+
+		// Replace any content types. e.g., "page,post".
+		if ( ! empty( $this->content_types ) ) {
+
+			foreach ( $this->content_types as $content_type ) {
+				$search_keyword = str_replace( [ $content_type, $content_type . ',' ], '', $search_keyword );
+			}
+		}
+
+		$this->search_keyword = trim( $search_keyword );
+	}
+
+	/**
+	 * run_search_queries
+	 *
+	 * Builds search queries to return data based on the search.
+	 */
+	public function run_search_queries() {
+
+		if ( ':am' === $this->filter_name || 'search' === $this->command_type ) {
+			$this->run_admin_menu_pages_query();
+		}
+		if ( ':u' === $this->filter_name || 'search' === $this->command_type ) {
+			$this->run_user_query();
+		}
+		if ( ':t=' === $this->filter_name || 'search' === $this->command_type ) {
+			$this->run_taxonomy_term_query();
+		}
+		if ( ':pt=' === $this->filter_name || 'search' === $this->command_type ) {
+			$this->run_posts_query();
+		}
+
+		// Only reorder/cap results if we have a search keyword. Searches like ":am" can return all admin pages without a search keyword.
+		if ( '' !== $this->search_keyword ) {
+
+			$local_search_keyword = $this->search_keyword;
+
+			// Now do some sorting with the Levenshtein function...
+			usort( $this->return_data['results'], function ( $a, $b ) use ( $local_search_keyword ) {
+				$lev_a = levenshtein( $local_search_keyword, $a->title );
+				$lev_b = levenshtein( $local_search_keyword, $b->title );
+
+				return $lev_a === $lev_b ? 0 : ( $lev_a > $lev_b ? 1 : - 1 );
+			} );
+
+			// And then cap the results at 10...
+			$this->return_data['results'] = array_slice( $this->return_data['results'], 0, $this->results_max, true );
+		}
+	}
+
+	public function run_admin_menu_pages_query() {
+
+		$admin_menu_pages = get_transient( 'acp_admin_pages' );
+
+		if ( ! empty( $admin_menu_pages ) ) {
+
+			// Only filter if we have a search keyword, otherwise return all the admin pages.
+			if ( '' !== $this->search_keyword ) {
+
+				$local_search_keyword = $this->search_keyword;
+
+				$callback = function ( $admin_menu_page_obj ) use ( $local_search_keyword ) {
+
+					$strpos_check = stripos( $admin_menu_page_obj->title, $local_search_keyword );
+
+					if ( false !== $strpos_check ) {
+						return true;
+					}
+				};
+
+				$admin_menu_pages = array_filter( $admin_menu_pages, $callback );
+			}
+
+			$this->return_data['results'] = array_merge( $this->return_data['results'], $admin_menu_pages );
+			$this->return_data['count']   = count( $this->return_data['results'] );
+		}
+	}
+
+	public function run_user_query() {
 
 		$query_args = [
-			's'              => $this->search_keyword,
-			'posts_per_page' => 10,
+			'search' => '*' . esc_attr( $this->search_keyword ) . '*',
+			'number' => $this->results_max,
 		];
 
-		if ( ! empty( $this->post_types ) ) {
-			$query_args['post_type'] = $this->post_types;
+		$users_search_query = new \WP_User_Query( $query_args );
+
+		if ( ! empty( $users_search_query->results ) ) {
+
+			foreach ( $users_search_query->results as $user ) {
+
+				$title       = $user->data->display_name;
+				$object_type = 'user';
+				$subtitle    = '';
+				$url         = get_edit_user_link( $user->data->ID );
+
+				$this->return_data['results'][] = new Data_Template( $title, $object_type, $subtitle, $url );
+			}
+
+			$this->return_data['count'] += $users_search_query->total_users;
 		}
+	}
 
-		$results     = [];
-		$total_count = 0;
+	public function run_taxonomy_term_query() {
 
-		$search_query = new \WP_Query( $query_args );
-		if ( ! empty( $search_query->posts ) ) {
-			$query_results = $search_query->posts;
+		$query_args = [
+			'search' => $this->search_keyword,
+			'number' => $this->results_max,
+		];
+
+		if ( ':t=' === $this->filter_name && ! empty( $this->content_types ) ) {
+			$query_args['taxonomy'] = $this->content_types;
 		} else {
-			$query_results = [];
+			$query_args['taxonomy'] = get_taxonomies( [
+				'public' => true,
+			] );
 		}
 
-		if ( ! empty( $query_results ) ) {
+		$taxonomy_term_search_query = new \WP_Term_Query( $query_args );
 
-			foreach ( $query_results as $result_post ) {
+		if ( ! empty( $taxonomy_term_search_query->terms ) ) {
 
-				$title     = $result_post->post_title;
-				$subtitle  = '';
-				$post_type = $result_post->post_type;
-				$url       = get_edit_post_link( $result_post->ID, 'noencode' );
+			foreach ( $taxonomy_term_search_query->terms as $term ) {
+
+				$taxonomy_obj         = get_taxonomy( $term->taxonomy );
+				$taxonomy_post_object = '';
+
+				if ( ! empty( $taxonomy_obj->object_type ) ) {
+
+					if ( is_array( $taxonomy_obj->object_type ) ) {
+						$taxonomy_post_object = $taxonomy_obj->object_type[0];
+					} else {
+						$taxonomy_post_object = $taxonomy_obj->object_type;
+					}
+				}
+
+				$title       = $term->name;
+				$object_type = $term->taxonomy;
+				$subtitle    = '';
+				$url         = get_edit_term_link( $term->term_id, $term->taxonomy, $taxonomy_post_object );
+
+				$this->return_data['results'][] = new Data_Template( $title, $object_type, $subtitle, $url );
+			}
+
+			$this->return_data['count'] += count( $taxonomy_term_search_query->terms );
+		}
+	}
+
+	public function run_posts_query() {
+
+		$query_args = [
+			's'                      => $this->search_keyword,
+			'posts_per_page'         => $this->results_max,
+			'update_post_meta_cache' => true,
+		];
+
+		if ( ':pt=' === $this->filter_name && ! empty( $this->content_types ) ) {
+			$query_args['post_type'] = $this->content_types;
+		}
+
+		$posts_search_query = new \WP_Query( $query_args );
+
+		if ( ! empty( $posts_search_query->posts ) ) {
+
+			foreach ( $posts_search_query->posts as $result_post ) {
+
+				$title       = $result_post->post_title;
+				$object_type = $result_post->post_type;
+				$subtitle    = '';
+				$url         = get_edit_post_link( $result_post->ID, 'noencode' );
 
 				if ( is_post_type_hierarchical( $result_post->post_type ) ) {
 					$subtitle = $this->get_hierarchical_subtitle( $result_post );
 				}
 
-				$results[] = new Data_Template( $title, $post_type, $subtitle, $url );
+				$this->return_data['results'][] = new Data_Template( $title, $object_type, $subtitle, $url );
 			}
 
-			$total_count = intval( $search_query->found_posts );
+			$this->return_data['count'] += $posts_search_query->found_posts;
 		}
-
-		$this->return_data = [
-			'results' => $results,
-			'count'   => $total_count,
-			'args'    => $query_args,
-		];
 	}
 
 	/**
@@ -259,42 +479,5 @@ class Search {
 		}
 
 		return $subtitle;
-	}
-
-	/**
-	 * get_search_post_types
-	 *
-	 * Parses the search keyword for post types, taxonomies or users.
-	 * ":pt" for post type, e.g. ":pt=page".
-	 * ":t" for taxonomy, e.g. ":t=category".
-	 * ":u" for user, e.g. ":u". No equal sign required.
-	 */
-	public function get_search_post_types() {
-
-		$post_types         = [];
-		$search_keyword_arr = explode( ' ', $this->command_raw );
-
-		foreach ( $search_keyword_arr as $search_word ) {
-
-			if ( false !== strpos( $search_word, ':' ) ) {
-				$post_types[] = str_replace( ':', '', $search_word );
-			}
-		}
-
-		$this->post_types = $post_types;
-	}
-
-	public function clean_search_keyword() {
-
-		$search_keyword = $this->command_raw;
-
-		if ( ! empty( $this->post_types ) ) {
-
-			foreach ( $this->post_types as $post_type ) {
-				$search_keyword = str_replace( ':' . $post_type, '', $search_keyword );
-			}
-		}
-
-		$this->search_keyword = $search_keyword;
 	}
 }
