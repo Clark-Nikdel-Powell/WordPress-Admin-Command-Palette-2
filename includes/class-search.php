@@ -114,6 +114,8 @@ class Search {
 			$this->run_search_queries();
 		}
 
+		$this->return_data['search_keyword'] = $this->search_keyword;
+
 		$response = new \WP_REST_Response( $this->return_data );
 
 		return $response;
@@ -235,7 +237,7 @@ class Search {
 				$content_types_str = str_replace( $this->filter_name, '', $search_word );
 
 				// E.g., "page,post" or just "page".
-				if ( false !== strpos( ',', $content_types_str ) ) {
+				if ( false !== strpos( $content_types_str, ',' ) ) {
 
 					// Now "page,post" becomes array(page, post).
 					$content_types_arr = explode( ',', $content_types_str );
@@ -273,7 +275,12 @@ class Search {
 		if ( ! empty( $this->content_types ) ) {
 
 			foreach ( $this->content_types as $content_type ) {
-				$search_keyword = str_replace( [ $content_type, $content_type . ',' ], '', $search_keyword );
+
+				$pos = strpos( $search_keyword, $content_type );
+
+				if ( false !== $pos ) {
+					$search_keyword = substr_replace( $search_keyword, '', $pos, strlen( $content_type ) );
+				}
 			}
 		}
 
