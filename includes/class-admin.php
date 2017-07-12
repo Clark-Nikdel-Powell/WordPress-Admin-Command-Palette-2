@@ -111,7 +111,7 @@ class Admin {
 			}
 
 			$taxonomies_arr = array();
-			$taxonomy_args        = apply_filters( 'acp_available_taxonomy_args', [
+			$taxonomy_args  = apply_filters( 'acp_available_taxonomy_args', [
 				'public' => true,
 			] );
 			$taxonomies     = get_taxonomies( $taxonomy_args );
@@ -208,6 +208,8 @@ class Admin {
 			// Loop through the admin submenu pages and add the data to an array.
 			foreach ( $admin_submenu_arr as $parent_slug => $admin_submenu_items ) {
 
+				$submenu_title  = '';
+				$submenu_url    = '';
 				$submenu_prefix = '';
 
 				if ( 'index.php' === $parent_slug ) {
@@ -240,6 +242,9 @@ class Admin {
 				if ( 'options-general.php' === $parent_slug ) {
 					$submenu_prefix = 'Settings';
 				}
+				if ( empty( $submenu_prefix ) ) {
+					$submenu_prefix = ucwords( str_replace( [ '-', ' ', '#', 'edit.php', '.php', '?post_type=' ], [ ' ', ' ', ' ', '', '', '' ], $parent_slug ) );
+				}
 
 				if ( '' !== $submenu_prefix ) {
 					$submenu_prefix .= ' / ';
@@ -248,25 +253,13 @@ class Admin {
 				// The submenu pages are grouped in sub-arrays under the parent slug, hence the extra loop.
 				foreach ( $admin_submenu_items as $menu_order => $admin_submenu_item ) {
 
-					$submenu_title = $submenu_prefix . $admin_submenu_item[0];
+					$submenu_title = $submenu_prefix . ucwords( str_replace( [ '-', '#' ], ' ', $admin_submenu_item[0] ) );
 					$submenu_url   = $admin_submenu_item[2];
 
 					// When dealing with a submenu URL, if there isn't a .php suffix,
 					// then the full URL is built based on the parent slug.
 					if ( false === strpos( $submenu_url, '.php' ) ) {
 						$submenu_url = $parent_slug . '?page=' . $admin_submenu_item[2];
-					}
-
-					// If "Add" is present, we need to append the post type name to the title for context.
-					if ( false !== strpos( $submenu_title, 'Add' ) && 0 !== strpos( $submenu_url, 'post_type=' ) ) {
-
-						$equal_position = strpos( $submenu_url, '=' );
-
-						if ( false !== $equal_position ) {
-							$submenu_post_type_slug = substr( $submenu_url, $equal_position + 1 );
-
-							$submenu_title .= ' ' . ucfirst( $submenu_post_type_slug );
-						}
 					}
 
 					// Don't include the dashboard twice
