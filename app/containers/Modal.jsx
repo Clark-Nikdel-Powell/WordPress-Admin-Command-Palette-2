@@ -35,6 +35,7 @@ export default class Modal extends Component {
                         toggleHelp={this.props.toggleHelp}
                         helpOpen={this.props.helpOpen}
                         postTypes={this.props.postTypes}
+                        taxonomies={this.props.taxonomies}
                     />
                     <Results
                         results={this.props.results}
@@ -54,5 +55,6 @@ export default class Modal extends Component {
         toggleHelp: PropTypes.func.isRequired,
         helpOpen: PropTypes.bool.isRequired,
         postTypes: PropTypes.array.isRequired,
+        taxonomies: PropTypes.array.isRequired,
     }
 }

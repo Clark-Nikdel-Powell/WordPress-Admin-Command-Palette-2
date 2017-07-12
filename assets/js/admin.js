@@ -13435,7 +13435,8 @@ var Admin = function (_Component) {
             search: '',
             results: [],
             count: 0,
-            postTypes: acp_object.helpData.postTypes
+            postTypes: acp_object.helpData.postTypes,
+            taxonomies: acp_object.helpData.taxonomies
         };
         return _this;
     }
@@ -13471,10 +13472,18 @@ var Admin = function (_Component) {
             return _react2.default.createElement(
                 'div',
                 null,
-                this.state.modalOpen ? _react2.default.createElement(_Modal2.default, { closeModal: this.closeModal, search: this.state.search, results: this.state.results,
+                this.state.modalOpen ? _react2.default.createElement(_Modal2.default, {
+                    closeModal: this.closeModal,
+                    search: this.state.search,
+                    results: this.state.results,
                     count: this.state.count,
-                    updateInput: this.updateInput, clearInput: this.clearInput,
-                    toggleHelp: this.toggleHelp, helpOpen: this.state.helpOpen, postTypes: this.state.postTypes }) : null
+                    updateInput: this.updateInput,
+                    clearInput: this.clearInput,
+                    toggleHelp: this.toggleHelp,
+                    helpOpen: this.state.helpOpen,
+                    postTypes: this.state.postTypes,
+                    taxonomies: this.state.taxonomies
+                }) : null
             );
         }
     }]);
@@ -13692,7 +13701,7 @@ var Help = function (_Component) {
                         _react2.default.createElement(
                             'span',
                             { className: 'acp-help-text' },
-                            'Use ":" to search by post type, e.g. ":page what"'
+                            'Use ":pt=" to filter by post type, e.g. ":pt=page pirates"'
                         ),
                         _react2.default.createElement(
                             'span',
@@ -13708,7 +13717,32 @@ var Help = function (_Component) {
                         _react2.default.createElement(
                             'span',
                             { className: 'acp-help-text' },
-                            'Use "-" to do a negative search.'
+                            'Use ":t=" to filter by taxonomy, e.g. ":t=category sandwiches"'
+                        ),
+                        _react2.default.createElement(
+                            'span',
+                            {
+                                className: 'acp-help-description' },
+                            'Available taxonomies: ',
+                            this.props.taxonomies.join(', ')
+                        )
+                    ),
+                    _react2.default.createElement(
+                        'li',
+                        null,
+                        _react2.default.createElement(
+                            'span',
+                            { className: 'acp-help-text' },
+                            'Use ":u" to search for users, e.g. ":u Steve"'
+                        )
+                    ),
+                    _react2.default.createElement(
+                        'li',
+                        null,
+                        _react2.default.createElement(
+                            'span',
+                            { className: 'acp-help-text' },
+                            'Use ":am" to search for admin menu pages, e.g. ":am Dashboard"'
                         )
                     ),
                     _react2.default.createElement(
@@ -13740,6 +13774,15 @@ var Help = function (_Component) {
                         _react2.default.createElement(
                             'span',
                             { className: 'acp-help-text' },
+                            'Use "-" to do a negative search.'
+                        )
+                    ),
+                    _react2.default.createElement(
+                        'li',
+                        null,
+                        _react2.default.createElement(
+                            'span',
+                            { className: 'acp-help-text' },
                             'Press ',
                             _react2.default.createElement(
                                 'kbd',
@@ -13760,7 +13803,8 @@ var Help = function (_Component) {
 Help.propTypes = {
     toggleHelp: _propTypes2.default.func.isRequired,
     helpOpen: _propTypes2.default.bool.isRequired,
-    postTypes: _propTypes2.default.array.isRequired
+    postTypes: _propTypes2.default.array.isRequired,
+    taxonomies: _propTypes2.default.array.isRequired
 };
 exports.default = Help;
 
@@ -13852,7 +13896,8 @@ var Modal = function (_Component) {
                     _react2.default.createElement(_Help2.default, {
                         toggleHelp: this.props.toggleHelp,
                         helpOpen: this.props.helpOpen,
-                        postTypes: this.props.postTypes
+                        postTypes: this.props.postTypes,
+                        taxonomies: this.props.taxonomies
                     }),
                     _react2.default.createElement(_Results2.default, {
                         results: this.props.results
@@ -13874,7 +13919,8 @@ Modal.propTypes = {
     results: _propTypes2.default.array.isRequired,
     toggleHelp: _propTypes2.default.func.isRequired,
     helpOpen: _propTypes2.default.bool.isRequired,
-    postTypes: _propTypes2.default.array.isRequired
+    postTypes: _propTypes2.default.array.isRequired,
+    taxonomies: _propTypes2.default.array.isRequired
 };
 exports.default = Modal;
 

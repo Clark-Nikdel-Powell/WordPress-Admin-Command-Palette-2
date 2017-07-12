@@ -104,19 +104,28 @@ class Admin {
 			wp_enqueue_script( $this->plugin_slug . '-admin-script', plugins_url( 'assets/js/admin.js', dirname( __FILE__ ) ), array( 'jquery' ), $this->version );
 
 			$post_types_arr = array();
-
-			$args = [
+			$pt_args        = apply_filters( 'acp_available_post_types_args', [
 				'public' => true,
-			];
-
-			$post_types = get_post_types( $args );
+			] );
+			$post_types     = get_post_types( $pt_args );
 
 			foreach ( $post_types as $post_type_name ) {
 				$post_types_arr[] = $post_type_name;
 			}
 
+			$taxonomies_arr = array();
+			$taxonomy_args        = apply_filters( 'acp_available_taxonomy_args', [
+				'public' => true,
+			] );
+			$taxonomies     = get_taxonomies( $taxonomy_args );
+
+			foreach ( $taxonomies as $taxonomy_name ) {
+				$taxonomies_arr[] = $taxonomy_name;
+			}
+
 			$help_data = [
-				'postTypes' => $post_types_arr,
+				'postTypes'  => $post_types_arr,
+				'taxonomies' => $taxonomies_arr,
 			];
 
 			wp_localize_script( $this->plugin_slug . '-admin-script', 'acp_object', array(

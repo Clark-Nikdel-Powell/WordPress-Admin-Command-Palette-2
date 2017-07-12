@@ -15,6 +15,7 @@ export default class Admin extends Component {
             results: [],
             count: 0,
             postTypes: acp_object.helpData.postTypes,
+            taxonomies: acp_object.helpData.taxonomies,
         };
     }
 
@@ -104,10 +105,18 @@ export default class Admin extends Component {
             <div>
                 {
                     this.state.modalOpen
-                        ? <Modal closeModal={this.closeModal} search={this.state.search} results={this.state.results}
-                                 count={this.state.count}
-                                 updateInput={this.updateInput} clearInput={this.clearInput}
-                                 toggleHelp={this.toggleHelp} helpOpen={this.state.helpOpen} postTypes={this.state.postTypes}/>
+                        ? <Modal
+                            closeModal={this.closeModal}
+                            search={this.state.search}
+                            results={this.state.results}
+                            count={this.state.count}
+                            updateInput={this.updateInput}
+                            clearInput={this.clearInput}
+                            toggleHelp={this.toggleHelp}
+                            helpOpen={this.state.helpOpen}
+                            postTypes={this.state.postTypes}
+                            taxonomies={this.state.taxonomies}
+                            />
                         : null
                 }
             </div>
