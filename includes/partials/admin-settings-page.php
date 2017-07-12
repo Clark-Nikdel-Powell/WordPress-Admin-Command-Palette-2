@@ -12,106 +12,27 @@
  * @subpackage ACP/admin/partials
  */
 
-// Set up data
-$post_types = get_post_types( array(), 'objects' );
-$taxonomies = get_taxonomies( array(), 'objects' );
-
-$included_post_types = get_option( 'acp_included_post_types' );
-$included_taxonomies = get_option( 'acp_included_taxonomies' );
-
-// Nav menu items are not editable like other post types
-unset( $post_types['nav_menu_item'] );
-unset( $post_types['revision'] );
-
 ?>
 
 <div>
+	<h2><?php esc_html_e( 'Using the Admin Command Palette', 'acp' ); ?></h2>
 
-	<h2>Admin Command Palette Settings</h2>
+	<ol>
+		<li><?php esc_html_e( '"Shift+Shift" activates the Admin Command Palette modal window.', 'acp' ); ?></li>
+		<li><?php esc_html_e( 'Click the overlay or ESC to close the modal window.', 'acp' ); ?></li>
+		<li><?php esc_html_e( 'Use ":pt=" to filter by post type, e.g. ":pt=page pirates"', 'acp' ); ?></li>
+		<li><?php esc_html_e( 'Use ":t=" to filter by taxonomy, e.g. ":t=category sandwiches"', 'acp' ); ?></li>
+		<li><?php esc_html_e( 'Use ":u" to search for users, e.g. ":u Steve"', 'acp' ); ?></li>
+		<li><?php esc_html_e( 'Use ":am" to search for admin menu pages, e.g. ":am Dashboard"', 'acp' ); ?></li>
+		<li><?php esc_html_e( 'Use "-" to do a negative search.', 'acp' ); ?></li>
+		<li><?php esc_html_e( 'Cycle through results using the TAB key.', 'acp' ); ?></li>
+		<li>
+			<?php esc_html_e( 'Use "/" to send a command. Available commands are:', 'acp' ); ?>
+			<ol>
+				<li><?php esc_html_e( '"/ap": Activate an inactive plugin.', 'acp' ); ?></li>
+				<li><?php esc_html_e( '"/dp": Deactivate an inactive plugin.', 'acp' ); ?></li>
+			</ol>
+		</li>
 
-	<form action="options.php" method="post">
-
-		<?php settings_fields( 'acp_options' ); ?>
-
-		<?php
-		/*//////////////////////////////////////////////////////////////////////////////
-		//  General Settings  /////////////////////////////////////////////////////////
-		////////////////////////////////////////////////////////////////////////////*/
-		?>
-
-		<table class="form-table">
-			<tbody>
-			<?php // Included Post Types ?>
-			<tr>
-				<th scope="row">
-					<label>Included Post Types</label>
-				</th>
-				<td>
-
-					<?php
-					foreach ( $post_types as $post_type_slug => $post_type ) {
-
-						$checked = '';
-
-						if ( isset( $included_post_types[ $post_type_slug ] ) && '1' === $included_post_types[ $post_type_slug ] ) {
-							$checked = 'checked';
-						}
-
-						// Add count number to label
-						$post_type_counts      = wp_count_posts( $post_type->name, 'readable' );
-						$post_type_count       = $post_type_counts->publish;
-						$post_type_count_label = 'Published';
-
-						if ( 'attachment' === $post_type_slug ) {
-							$post_type_count       = $post_type_counts->inherit;
-							$post_type_count_label = 'Uploaded';
-						}
-						?>
-						<p><label>
-								<input type="checkbox" name="acp_included_post_types[<?php echo esc_attr( $post_type_slug ); ?>]" value="1" <?php echo esc_attr( $checked ); ?> />
-								<?php echo esc_html( $post_type->labels->name ); ?>
-								<?php if ( '' !== $post_type_count && '' !== $post_type_count_label ) { ?>
-									<em class="count">(<?php echo esc_html( $post_type_count . ' ' . $post_type_count_label ); ?>)</em>
-								<?php } ?>
-							</label></p>
-					<?php } ?>
-				</td>
-			</tr>
-
-			<?php // Included Taxonomies ?>
-			<tr>
-				<th scope="row">
-					<label>Included Taxonomies</label>
-				</th>
-				<td>
-					<?php
-					foreach ( $taxonomies as $taxonomy_slug => $taxonomy ) {
-
-						$checked = '';
-
-						if ( isset( $included_taxonomies[ $taxonomy_slug ] ) && '1' === $included_taxonomies[ $taxonomy_slug ] ) {
-							$checked = 'checked';
-						}
-
-						// Add count number to label
-						$taxonomy_count = wp_count_terms( $taxonomy_slug );
-
-						?>
-						<p><label>
-								<input type="checkbox" name="acp_included_taxonomies[<?php echo esc_attr( $taxonomy_slug ); ?>]" value="1" <?php echo esc_attr( $checked ); ?> />
-								<?php echo esc_html( $taxonomy->labels->name ); ?>
-								<em class="count">(<?php echo esc_html( $taxonomy_count ); ?>)</em>
-							</label></p>
-					<?php } ?>
-				</td>
-			</tr>
-
-			</tbody>
-		</table>
-
-		<p>
-			<input class="button button-primary" name="Submit" type="submit" value="<?php esc_attr_e( 'Save Changes' ); ?>"/>
-		</p>
-
-	</form>
+	</ol>
 </div>

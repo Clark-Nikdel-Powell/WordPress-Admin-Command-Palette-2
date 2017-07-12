@@ -13751,6 +13751,15 @@ var Help = function (_Component) {
                         _react2.default.createElement(
                             'span',
                             { className: 'acp-help-text' },
+                            'Use "-" to do a negative search.'
+                        )
+                    ),
+                    _react2.default.createElement(
+                        'li',
+                        null,
+                        _react2.default.createElement(
+                            'span',
+                            { className: 'acp-help-text' },
                             'Use "/" to send a command. Available commands are:'
                         ),
                         _react2.default.createElement(
@@ -13766,15 +13775,6 @@ var Help = function (_Component) {
                                 null,
                                 '"/dp": Deactivate an active plugin.'
                             )
-                        )
-                    ),
-                    _react2.default.createElement(
-                        'li',
-                        null,
-                        _react2.default.createElement(
-                            'span',
-                            { className: 'acp-help-text' },
-                            'Use "-" to do a negative search.'
                         )
                     ),
                     _react2.default.createElement(
@@ -13975,7 +13975,7 @@ var Results = function (_Component) {
                 { key: key },
                 _react2.default.createElement(
                     'a',
-                    { href: result.url },
+                    { href: result.url, tabIndex: key },
                     _react2.default.createElement(
                         'div',
                         null,

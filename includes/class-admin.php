@@ -70,9 +70,6 @@ class Admin {
 		// Render the markup for the modal
 		add_action( 'admin_footer', [ $this, 'display_plugin_form_modal' ], 20 );
 
-		// Register the options
-		add_action( 'admin_init', [ $this, 'register_options' ], 20 );
-
 		// Add the Options Page
 		add_action( 'admin_menu', [ $this, 'add_options_page' ], 20 );
 
@@ -143,12 +140,6 @@ class Admin {
 	public function display_plugin_form_modal() {
 
 		echo '<div id="acp" class="acp"></div>';
-	}
-
-	public function register_options() {
-
-		register_setting( 'acp_options', 'acp_included_post_types' );
-		register_setting( 'acp_options', 'acp_included_taxonomies' );
 	}
 
 	public function add_options_page() {

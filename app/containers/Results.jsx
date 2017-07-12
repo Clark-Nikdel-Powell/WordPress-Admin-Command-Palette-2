@@ -13,7 +13,7 @@ export default class Results extends Component {
 
         return (
             <li key={key}>
-                <a href={result.url}>
+                <a href={result.url} tabIndex={key}>
                     <div>{result.title}</div>
                     <small className="acp-subtitle"><strong>{result.object_type}</strong>{result.subtitle}</small>
                 </a>

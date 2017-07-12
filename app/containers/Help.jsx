@@ -30,6 +30,7 @@ export default class Help extends Component {
                         <li>
                             <span className="acp-help-text">Use ":am" to search for admin menu pages, e.g. ":am Dashboard"</span>
                         </li>
+                        <li><span className="acp-help-text">Use "-" to do a negative search.</span></li>
                         <li>
                             <span className="acp-help-text">Use "/" to send a command. Available commands are:</span>
                             <ul className="acp-help-description">
@@ -37,7 +38,6 @@ export default class Help extends Component {
                                 <li>"/dp": Deactivate an active plugin.</li>
                             </ul>
                         </li>
-                        <li><span className="acp-help-text">Use "-" to do a negative search.</span></li>
                         <li><span className="acp-help-text">Press <kbd>esc</kbd> or click on the overlay to close the modal.</span>
                         </li>
                     </ul>
