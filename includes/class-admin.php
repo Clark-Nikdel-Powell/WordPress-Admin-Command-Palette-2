@@ -51,6 +51,7 @@ class Admin {
 	 * settings page and menu.
 	 */
 	private function __construct() {
+
 		$plugin            = Plugin::get_instance();
 		$this->plugin_slug = $plugin->get_plugin_slug();
 		$this->version     = $plugin->get_plugin_version();
@@ -126,9 +127,10 @@ class Admin {
 			];
 
 			wp_localize_script( $this->plugin_slug . '-admin-script', 'acp_object', array(
-					'api_nonce'      => wp_create_nonce( 'wp_rest' ),
-					'api_search_url' => site_url( '/wp-json/' . $this->plugin_slug . '/v1/search/' ),
-					'helpData'       => $help_data,
+					'api_nonce'            => wp_create_nonce( 'wp_rest' ),
+					'api_pretty_permalink' => (get_option( 'permalink_structure' ) ? 'true' : 'false'),
+					'api_search_url'       => get_rest_url( null, '/' . $this->plugin_slug . '/v1/search/' ),
+					'helpData'             => $help_data,
 				)
 			);
 		}
@@ -147,6 +149,7 @@ class Admin {
 		add_options_page( 'Admin Command Palette', 'Admin Command Palette', 'manage_options', 'acp', 'ACP\options_page' );
 
 		function options_page() {
+
 			include_once( 'partials/admin-settings-page.php' );
 		}
 	}
@@ -243,7 +246,14 @@ class Admin {
 					$submenu_prefix = 'Settings';
 				}
 				if ( empty( $submenu_prefix ) ) {
-					$submenu_prefix = ucwords( str_replace( [ '-', ' ', '#', 'edit.php', '.php', '?post_type=' ], [ ' ', ' ', ' ', '', '', '' ], $parent_slug ) );
+					$submenu_prefix = ucwords( str_replace( [ '-', ' ', '#', 'edit.php', '.php', '?post_type=' ], [
+						' ',
+						' ',
+						' ',
+						'',
+						'',
+						'',
+					], $parent_slug ) );
 				}
 
 				if ( '' !== $submenu_prefix ) {
@@ -253,7 +263,10 @@ class Admin {
 				// The submenu pages are grouped in sub-arrays under the parent slug, hence the extra loop.
 				foreach ( $admin_submenu_items as $menu_order => $admin_submenu_item ) {
 
-					$submenu_title = $submenu_prefix . ucwords( str_replace( [ '-', '#' ], ' ', $admin_submenu_item[0] ) );
+					$submenu_title = $submenu_prefix . ucwords( str_replace( [
+							'-',
+							'#',
+						], ' ', $admin_submenu_item[0] ) );
 					$submenu_url   = $admin_submenu_item[2];
 
 					// When dealing with a submenu URL, if there isn't a .php suffix,
@@ -303,6 +316,7 @@ class Admin {
 	}
 
 	public function clear_admin_menu_pages_transient() {
+
 		delete_transient( $this->admin_pages_transient_name );
 	}
 }

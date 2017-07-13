@@ -39,6 +39,7 @@ class Plugin {
 	 * @since     2.0.0
 	 */
 	private function __construct() {
+
 		$this->plugin_version = ADMIN_COMMAND_PALETTE_VERSION;
 	}
 
@@ -49,6 +50,7 @@ class Plugin {
 	 * @return   string Plugin slug variable.
 	 */
 	public function get_plugin_slug() {
+
 		return $this->plugin_slug;
 	}
 
@@ -59,6 +61,7 @@ class Plugin {
 	 * @return   string Plugin version.
 	 */
 	public function get_plugin_version() {
+
 		return $this->plugin_version;
 	}
 
@@ -68,6 +71,7 @@ class Plugin {
 	 * @since    2.0.0
 	 */
 	public static function activate() {
+
 		$included_posts_types = get_option( 'acp_included_post_types' );
 		$included_taxonomies  = get_option( 'acp_included_taxonomies' );
 

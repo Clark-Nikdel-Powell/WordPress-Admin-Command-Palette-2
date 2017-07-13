@@ -3,31 +3,49 @@ import fetch from 'isomorphic-fetch';
 import Mousetrap from 'mousetrap';
 import Modal from './Modal';
 
+const initialState = {
+    modalOpen: false,
+    helpOpen: false,
+    search: '',
+    results: [],
+    count: 0,
+    postTypes: acp_object.helpData.postTypes,
+    taxonomies: acp_object.helpData.taxonomies,
+};
+
 export default class Admin extends Component {
 
     constructor(props) {
         super(props);
 
-        this.state = {
-            modalOpen: false,
-            helpOpen: false,
-            search: '',
-            results: [],
-            count: 0,
-            postTypes: acp_object.helpData.postTypes,
-            taxonomies: acp_object.helpData.taxonomies,
-        };
+        this.state = initialState;
     }
 
     componentDidMount() {
-        Mousetrap.bind('shift shift', () => this.revealModal(true));
-        Mousetrap.bind('esc', () => this.revealModal(false));
+        Mousetrap.bind('shift shift', () => this.toggleModal());
+        Mousetrap.bind('esc', () => this.closeModal());
+
+        Mousetrap.prototype.stopCallback = function (e, element) {
+            return element.tagName === 'INPUT' && e.key !== 'Escape';
+        }
     }
 
     componentWillUnmount() {
         Mousetrap.unbind('shift shift', () => this.revealModal);
         Mousetrap.unbind('esc', () => this.revealModal);
     }
+
+    reset = () => {
+        this.setState(initialState);
+    };
+
+    toggleModal = () => {
+        let modalOpen = this.state.modalOpen;
+        let newState = initialState;
+        newState.modalOpen = !modalOpen;
+
+        this.setState(newState);
+    };
 
     revealModal = (revealed) => {
 
@@ -52,7 +70,7 @@ export default class Admin extends Component {
             return;
         }
 
-        fetch(`${acp_object.api_search_url}/?command=${this.state.search}`, {
+        fetch(`${this.searchUrl()}`, {
             credentials: 'same-origin',
             method: 'GET',
             headers: {
@@ -68,6 +86,14 @@ export default class Admin extends Component {
                 }),
                 (err) => console.log('error', err)
             );
+    };
+
+    searchUrl = () => {
+        let url = acp_object.api_search_url;
+        url += 'false' === acp_object.api_pretty_permalink ? '&' : '?';
+        url += 'command=' + this.state.search;
+
+        return url;
     };
 
     updateInput = (e) => {
@@ -106,17 +132,17 @@ export default class Admin extends Component {
                 {
                     this.state.modalOpen
                         ? <Modal
-                            closeModal={this.closeModal}
-                            search={this.state.search}
-                            results={this.state.results}
-                            count={this.state.count}
-                            updateInput={this.updateInput}
-                            clearInput={this.clearInput}
-                            toggleHelp={this.toggleHelp}
-                            helpOpen={this.state.helpOpen}
-                            postTypes={this.state.postTypes}
-                            taxonomies={this.state.taxonomies}
-                            />
+                        closeModal={this.closeModal}
+                        search={this.state.search}
+                        results={this.state.results}
+                        count={this.state.count}
+                        updateInput={this.updateInput}
+                        clearInput={this.clearInput}
+                        toggleHelp={this.toggleHelp}
+                        helpOpen={this.state.helpOpen}
+                        postTypes={this.state.postTypes}
+                        taxonomies={this.state.taxonomies}
+                    />
                         : null
                 }
             </div>
